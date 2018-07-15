@@ -66,15 +66,25 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-图片" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-图片压缩总结" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2018/07/15/图片/" class="article-date">
-  <time datetime="2018-07-15T06:12:14.288Z" itemprop="datePublished">2018-07-15</time>
+    <a href="/2018/07/15/图片压缩总结/" class="article-date">
+  <time datetime="2018-07-15T05:50:04.000Z" itemprop="datePublished">2018-07-15</time>
 </a>
     
   </div>
   <div class="article-inner">
     
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/07/15/图片压缩总结/">图片压缩总结</a>
+    </h1>
+  
+
+      </header>
     
     <div class="article-entry" itemprop="articleBody">
       
@@ -98,42 +108,6 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">+ (NSData*) convertProfileImageTosRGB:(NSImage*)image&#123;</div><div class="line">    if(image != nil) &#123;</div><div class="line">        </div><div class="line">        CGImageRef cgImage = [ImageHelper newCGImageRefFromNSImage:image];</div><div class="line">        NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];</div><div class="line">        CGImageRelease(cgImage);</div><div class="line">        </div><div class="line">       if(![imageRep.colorSpace.localizedName containsString:@&quot;RGB&quot;])&#123;</div><div class="line">            imageRep = [imageRep bitmapImageRepByConvertingToColorSpace:[NSColorSpace sRGBColorSpace]renderingIntent:NSColorRenderingIntentDefault];</div><div class="line">            [imageRep setProperty:NSImageColorSyncProfileData withValue:nil];</div><div class="line">            </div><div class="line">            NSData* imageData = [NSBitmapImageRep representationOfImageRepsInArray:@[imageRep] usingType:NSJPEGFileType properties:@&#123;NSImageCompressionFactor:@(1)&#125;];</div><div class="line">            </div><div class="line">            return imageData;</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    return nil;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>###Step2:获取图片的实际像素大小[基于像素点的大小]<br><a href="https://stackoverflow.com/questions/9264051/nsimage-size-not-real-size-with-some-pictures" target="_blank" rel="external">https://stackoverflow.com/questions/9264051/nsimage-size-not-real-size-with-some-pictures</a></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">+(NSSize)getImageSizeWithData:(NSData *)imageData&#123;</div><div class="line">    NSBitmapImageRep *rep = [NSBitmapImageRep imageRepWithData:imageData];</div><div class="line">    return NSMakeSize(rep.pixelsWide, rep.pixelsHigh);</div><div class="line">&#125;</div><div class="line"></div><div class="line">NSImage size method return size in points. To get size represented in pixels you need inspect NSImage.representations property that contains an array of NSImageRep objects with pixelWide/pixelHigh properties and simple change size NSImage object:</div><div class="line"></div><div class="line">NSImage size method returns size information that is screen resolution dependent. To get the size represented in the actual file image you need to use an NSImageRep. You can get an NSImageRepfrom an NSImage using the representations method. Alternatively you can create a NSBitmapImageRep subclass instance directly like this:</div><div class="line">NSArray * imageReps = [NSBitmapImageRep imageRepsWithContentsOfFile:@&quot;&lt;path to image&gt;&quot;];</div><div class="line"></div><div class="line">NSInteger width = 0;</div><div class="line">NSInteger height = 0;</div><div class="line"></div><div class="line">for (NSImageRep * imageRep in imageReps) &#123;</div><div class="line">    if ([imageRep pixelsWide] &gt; width) width = [imageRep pixelsWide];  </div><div class="line">    if ([imageRep pixelsHigh] &gt; height) height = [imageRep pixelsHigh];  </div><div class="line">&#125;</div><div class="line"></div><div class="line">NSLog(@&quot;Width from NSBitmapImageRep: %f&quot;,(CGFloat)width);</div><div class="line">NSLog(@&quot;Height from NSBitmapImageRep: %f&quot;,(CGFloat)height);</div></pre></td></tr></table></figure>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/15/图片/" data-id="cjjmg5h0l0000q605j6ice221" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-图片压缩总结" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/07/15/图片压缩总结/" class="article-date">
-  <time datetime="2018-07-15T05:50:04.000Z" itemprop="datePublished">2018-07-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/07/15/图片压缩总结/">图片压缩总结</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
       
     </div>
     <footer class="article-footer">
@@ -316,10 +290,6 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
-        
-          <li>
-            <a href="/2018/07/15/图片/">(no title)</a>
-          </li>
         
           <li>
             <a href="/2018/07/15/图片压缩总结/">图片压缩总结</a>
