@@ -1,344 +1,55 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  
-  <title>孙经林的个人博客</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="孙经林的个人博客">
-<meta property="og:url" content="http://yoursite.com/index.html">
-<meta property="og:site_name" content="孙经林的个人博客">
-<meta property="og:locale" content="zh-hans">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="孙经林的个人博客">
-  
-    <link rel="alternate" href="/atom.xml" title="孙经林的个人博客" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png">
-  
-  
-    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
-  
-  <link rel="stylesheet" href="/css/style.css">
-  
+extends base
 
-</head>
+block title
+  if config.subtitle
+    title= config.title + ' | ' + config.subtitle
+  else
+    title= config.title
 
-<body>
-  <div id="container">
-    <div id="wrap">
-      <header id="header">
-  <div id="banner"></div>
-  <div id="header-outer" class="outer">
-    <div id="header-title" class="inner">
-      <h1 id="logo-wrap">
-        <a href="/" id="logo">孙经林的个人博客</a>
-      </h1>
-      
-        <h2 id="subtitle-wrap">
-          <a href="/" id="subtitle">个人博客</a>
-        </h2>
-      
-    </div>
-    <div id="header-inner" class="inner">
-      <nav id="main-nav">
-        <a id="main-nav-toggle" class="nav-icon"></a>
-        
-          <a class="main-nav-link" href="/">Home</a>
-        
-          <a class="main-nav-link" href="/archives">Archives</a>
-        
-      </nav>
-      <nav id="sub-nav">
-        
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
-        
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
-      </nav>
-      <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
-      </div>
-    </div>
-  </div>
-</header>
-      <div class="outer">
-        <section id="main">
-  
-    <article id="post-图片压缩" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/07/15/图片压缩/" class="article-date">
-  <time datetime="2018-07-15T05:50:04.000Z" itemprop="datePublished">2018-07-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/07/15/图片压缩/">图片压缩总结</a>
-    </h1>
-  
+block content
+  for post in page.posts.toArray()
+    .post
+      h1.post-title
+        include _partial/helpers.pug
+        a(href=url_for(post.path))
+          +title(post)
+      .post-meta= post.date.format(config.date_format)
+      if theme.disqus
+        a.disqus-comment-count(data-disqus-identifier=post.path, href=url_for(post.path) + '#disqus_thread')
+      if theme.changyan
+        a.ds-thread-count(href=url_for(post.path) + '#SOHUCS')
+          span.cy_cmt_count(id='sourceId::' + post.date.valueOf() style='margin: 0 3px 0 1px;') 0
+          span= ' ' + __('Comment')
+      if post.description
+        .post-content
+          != post.description
+      else if post.excerpt
+        .post-content
+          != post.excerpt
+      else if post.content
+        - var br = 0
+        - for (var i = 0; i < 5; ++i) {
+          - br = post.content.indexOf('\n',br+1)
+          if br<0
+            - break
+          if br >150
+            - break
+        - }
+        if br < 0
+          .post-content
+            != post.content
+        else
+          .post-content
+            != post.content.substring(0, br)
+      p(class='readmore')
+        a(href=url_for(post.path))= __('Readmore')
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="摘要："><a href="#摘要：" class="headerlink" title="摘要："></a>摘要：</h1><p>图片压缩的指标考虑包括图片尺寸裁剪，图片尺寸等比缩放，图片质量压缩等。特定场景下，从保证图片压缩的质量考虑，上述指标需要兼顾处理。</p>
-<h2 id="1-详细综述："><a href="#1-详细综述：" class="headerlink" title="1.详细综述："></a>1.详细综述：</h2><p>1.图片裁剪(Copy)到指定的『区域大小』<br>注意：图片的裁剪，可能会导致图片的质量变大</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">+ (NSImage *)imageResize:(NSImage*)anImage newSize:(NSSize)newSize &#123;</div><div class="line">    NSImage *sourceImage = anImage;</div><div class="line">    // Report an error if the source isn&apos;t a valid image</div><div class="line">    if (!sourceImage.valid)&#123;</div><div class="line">        NSLog(@&quot;Invalid Image&quot;);</div><div class="line">    &#125; else &#123;</div><div class="line">        NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];</div><div class="line">        [smallImage lockFocus];</div><div class="line">        sourceImage.size = newSize;</div><div class="line">        [NSGraphicsContext currentContext].imageInterpolation = NSImageInterpolationHigh;</div><div class="line">        [sourceImage drawAtPoint:NSZeroPoint fromRect:CGRectMake(0, 0, newSize.width, newSize.height) operation:NSCompositeCopy fraction:1.0];</div><div class="line">        [smallImage unlockFocus];</div><div class="line">        return smallImage;</div><div class="line">    &#125;</div><div class="line">    return nil;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="2-图片等比缩放到指定的『区域大小』"><a href="#2-图片等比缩放到指定的『区域大小』" class="headerlink" title="2.图片等比缩放到指定的『区域大小』"></a>2.图片等比缩放到指定的『区域大小』</h2><p>思路：就是预先根据图片的大小与目标大小，进行选择『等比缩放』or[填充拉伸]尺寸。</p>
-<h2 id="3-图片质量压缩到指定质量比率"><a href="#3-图片质量压缩到指定质量比率" class="headerlink" title="3.图片质量压缩到指定质量比率"></a>3.图片质量压缩到指定质量比率</h2><h2 id="4-图片质量压缩到目标质量大小-模糊图"><a href="#4-图片质量压缩到目标质量大小-模糊图" class="headerlink" title="4.图片质量压缩到目标质量大小(模糊图)"></a>4.图片质量压缩到目标质量大小(模糊图)</h2><p>思路：<br>(1)图片压缩的最终比例，除了改变质量外，宽高比也可以适度缩放。</p>
-<h2 id="5-类微信的高清鲁班压缩策略"><a href="#5-类微信的高清鲁班压缩策略" class="headerlink" title="5.类微信的高清鲁班压缩策略"></a>5.类微信的高清鲁班压缩策略</h2><p><a href="https://github.com/Curzibn/Luban/blob/master/DESCRIPTION.md" target="_blank" rel="external">Luban</a>    </p>
-<h3 id="原则："><a href="#原则：" class="headerlink" title="原则："></a>原则：</h3><h4 id="Step1-压缩图片第一指标是大小。"><a href="#Step1-压缩图片第一指标是大小。" class="headerlink" title="Step1.压缩图片第一指标是大小。"></a>Step1.压缩图片第一指标是大小。</h4><p>在满足预期大小的指标下，根据图片本身的『宽高大小，宽高比以及质量大小』，计算目标图片尺寸的最优『图片尺寸』；<br>Step2.根据目标图片尺寸+计算得到的ImageSize, 进行”最终的压缩”</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div></pre></td><td class="code"><pre><div class="line">+ (NSDictionary*)_compressedInfoBylubanAlgorithm:(NSData*)imageData calibrateSize:(int)calibrateSize&#123;</div><div class="line">    CGSize imageSize = [[self class] getImageSizeWithData:imageData];</div><div class="line">    int width = imageSize.width;</div><div class="line">    int height = imageSize.height;</div><div class="line">    </div><div class="line">    // 缩略图尺寸设为2的倍数,为后面的缩放做准备</div><div class="line">    int thumbW = width % 2 == 1 ? width + 1 : width;</div><div class="line">    int thumbH = height % 2 == 1 ? height + 1 : height;</div><div class="line">    </div><div class="line">    // width = 短</div><div class="line">    // height = 长</div><div class="line">    BOOL exchanged = NO;</div><div class="line">    if (thumbW &gt; thumbH) &#123;</div><div class="line">        width = thumbH;</div><div class="line">        height = thumbW;</div><div class="line">        exchanged = YES;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    double scale = ((double) width / height);</div><div class="line">    double size = 0;</div><div class="line">    </div><div class="line">    if (scale &lt;= 1 &amp;&amp; scale &gt; 0.5625) &#123;</div><div class="line">        if (height &lt; 1664) &#123;</div><div class="line">            if (imageData.length / 1024 &lt; 150) &#123;</div><div class="line">                size = imageData.length/1024;</div><div class="line">            &#125;</div><div class="line">            else&#123;</div><div class="line">                size = (width * height) / pow(1664, 2) * 150;</div><div class="line">                size = size &lt; 60 ? 60 : size;</div><div class="line">            &#125;</div><div class="line">        &#125; else if (height &gt;= 1664 &amp;&amp; height &lt; 4990) &#123;</div><div class="line">            thumbW = width / 2;</div><div class="line">            thumbH = height / 2;</div><div class="line">            size = (thumbW * thumbH) / pow(2495, 2) * 300;</div><div class="line">            size = size &lt; 60 ? 60 : size;</div><div class="line">        &#125; else if (height &gt;= 4990 &amp;&amp; height &lt; 10240) &#123;</div><div class="line">            thumbW = width / 4;</div><div class="line">            thumbH = height / 4;</div><div class="line">            size = (thumbW * thumbH) / pow(2560, 2) * 300;</div><div class="line">            size = size &lt; 100 ? 100 : size;</div><div class="line">        &#125; else &#123;</div><div class="line">            int multiple = height / 1280 == 0 ? 1 : height / 1280;</div><div class="line">            thumbW = width / multiple;</div><div class="line">            thumbH = height / multiple;</div><div class="line">            size = (thumbW * thumbH) / pow(2560, 2) * 300;</div><div class="line">            size = size &lt; 100 ? 100 : size;</div><div class="line">        &#125;</div><div class="line">    &#125; else if (scale &lt;= 0.5625 &amp;&amp; scale &gt; 0.5) &#123;</div><div class="line">        if (height &lt; 1280 &amp;&amp; imageData.length / 1024 &lt; 200) &#123;</div><div class="line">            size = imageData.length/1024;</div><div class="line">        &#125;</div><div class="line">        else&#123;</div><div class="line">            int multiple = height / 1280 == 0 ? 1 : height / 1280;</div><div class="line">            thumbW = width / multiple;</div><div class="line">            thumbH = height / multiple;</div><div class="line">            size = (thumbW * thumbH) / (1440.0 * 2560.0) * 200;</div><div class="line">            size = size &lt; 100 ? 100 : size;</div><div class="line">        &#125;</div><div class="line">    &#125; else &#123;</div><div class="line">        int multiple = (int) ceil(height / (1280.0 / scale));</div><div class="line">        thumbW = width / multiple;</div><div class="line">        thumbH = height / multiple;</div><div class="line">        size = ((thumbW * thumbH) / (1280.0 * (1280 / scale))) * 500;</div><div class="line">        size = size &lt; 100 ? 100 : size;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    if (exchanged) &#123;</div><div class="line">        thumbW = thumbW + thumbH;</div><div class="line">        thumbH = thumbW - thumbH;</div><div class="line">        thumbW = thumbW - thumbH;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    //不能超过服务端限制 1M</div><div class="line">    size = size * 1024;</div><div class="line">    size = MAX(size, calibrateSize);// size &lt; calibrateSize(用于降低压缩的程度，提升压缩速度) &lt; M1</div><div class="line">    size = MIN(size, imageData.length); //不超过初始大小</div><div class="line">    size = MIN(size, M1);</div><div class="line">    </div><div class="line">    NSDictionary* compressedInfo = @&#123;@&quot;size&quot;:@(size),</div><div class="line">                                     @&quot;scale&quot;:@(scale),</div><div class="line">                                     @&quot;thumbW&quot;:@(thumbW),</div><div class="line">                                     @&quot;thumbH&quot;:@(thumbH)&#125;;</div><div class="line">    return compressedInfo;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>#2.压缩具体实现探讨：</p>
-<h2 id="1-基于质量压缩优先：兼顾最大像素"><a href="#1-基于质量压缩优先：兼顾最大像素" class="headerlink" title="1.基于质量压缩优先：兼顾最大像素"></a>1.基于质量压缩优先：兼顾最大像素</h2><p>CGImageSourceCreateWithData<br>CGImageSourceCreateThumbnailAtIndex<br>CGImageDestiantionCreatWithData<br>CGImageDestiantionAddImage</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line">+ (NSData *)_thumbnailImageDataWithImageData:(NSData *)imageData</div><div class="line">                                maxPixelSize:(CGFloat)maxPixelSize</div><div class="line">                                     quality:(CGFloat)quality &#123;</div><div class="line">    CGImageSourceRef imageSource = CGImageSourceCreateWithData((CFDataRef) imageData, NULL);</div><div class="line">    NSDictionary *imageOptions = @&#123;</div><div class="line">                                   (__bridge NSString *) kCGImageSourceCreateThumbnailFromImageAlways : @YES,</div><div class="line">                                   (__bridge NSString *) kCGImageSourceThumbnailMaxPixelSize : [NSNumber numberWithUnsignedInteger:maxPixelSize],</div><div class="line">                                   (__bridge NSString *) kCGImageSourceCreateThumbnailWithTransform : @YES,</div><div class="line">                                   &#125;;</div><div class="line">    </div><div class="line">    CGImageRef imageRef = CGImageSourceCreateThumbnailAtIndex(imageSource,</div><div class="line">                                                              0,</div><div class="line">                                                              (__bridge CFDictionaryRef) imageOptions);</div><div class="line">    // release</div><div class="line">    if (imageSource) &#123;</div><div class="line">        CFRelease(imageSource);</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    NSMutableData *thumbnailImageData = [[NSMutableData alloc] init];</div><div class="line">    CGImageDestinationRef destRef = CGImageDestinationCreateWithData((__bridge CFMutableDataRef) thumbnailImageData,</div><div class="line">                                                                     kUTTypeJPEG,</div><div class="line">                                                                     1,</div><div class="line">                                                                     NULL);</div><div class="line">    </div><div class="line">    NSDictionary *imageAddOptions = @&#123;</div><div class="line">                                      (__bridge NSString *) kCGImageDestinationLossyCompressionQuality : [NSNumber numberWithFloat:quality],</div><div class="line">                                      //(NSString *)kCGImageDestinationOptimizeColorForSharing:@(YES) //仅支持10.12及其以上</div><div class="line">                                      &#125;;</div><div class="line">    </div><div class="line">    CGImageDestinationAddImage(destRef,</div><div class="line">                               imageRef,</div><div class="line">                               (__bridge CFDictionaryRef) imageAddOptions);</div><div class="line">    CGImageDestinationFinalize(destRef);</div><div class="line">    // release</div><div class="line">    if (imageRef) &#123;</div><div class="line">        CFRelease(imageRef);</div><div class="line">    &#125;</div><div class="line">    // release</div><div class="line">    if (destRef) &#123;</div><div class="line">        CFRelease(destRef);</div><div class="line">    &#125;</div><div class="line">    return thumbnailImageData;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="2-利用NSBitmapImageRep进行JPEG压缩输出"><a href="#2-利用NSBitmapImageRep进行JPEG压缩输出" class="headerlink" title="2.利用NSBitmapImageRep进行JPEG压缩输出:"></a>2.利用NSBitmapImageRep进行JPEG压缩输出:</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:data];</div><div class="line">if (imgType == ImageSuffixType_png) &#123;</div><div class="line">    data = [imageRep representationUsingType:NSPNGFileType properties:@&#123;&#125;];</div><div class="line">&#125;</div><div class="line">else &#123;</div><div class="line">     NSDictionary* imageProps = @&#123;NSImageCompressionFactor: @(compression)&#125;;</div><div class="line">    data = [imageRep representationUsingType:NSJPEGFileType properties:imageProps];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="3-压缩图片的异常处理："><a href="#3-压缩图片的异常处理：" class="headerlink" title="3.压缩图片的异常处理："></a>3.压缩图片的异常处理：</h2><h3 id="Step1-去除额外的图片信息"><a href="#Step1-去除额外的图片信息" class="headerlink" title="Step1: 去除额外的图片信息"></a>Step1: 去除额外的图片信息</h3><p>NSImageColorSyncProfileData</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">+ (NSData*) convertProfileImageTosRGB:(NSImage*)image&#123;</div><div class="line">    if(image != nil) &#123;</div><div class="line">        </div><div class="line">        CGImageRef cgImage = [ImageHelper newCGImageRefFromNSImage:image];</div><div class="line">        NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];</div><div class="line">        CGImageRelease(cgImage);</div><div class="line">        </div><div class="line">       if(![imageRep.colorSpace.localizedName containsString:@&quot;RGB&quot;])&#123;</div><div class="line">            imageRep = [imageRep bitmapImageRepByConvertingToColorSpace:[NSColorSpace sRGBColorSpace]renderingIntent:NSColorRenderingIntentDefault];</div><div class="line">            [imageRep setProperty:NSImageColorSyncProfileData withValue:nil];</div><div class="line">            </div><div class="line">            NSData* imageData = [NSBitmapImageRep representationOfImageRepsInArray:@[imageRep] usingType:NSJPEGFileType properties:@&#123;NSImageCompressionFactor:@(1)&#125;];</div><div class="line">            </div><div class="line">            return imageData;</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    return nil;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h3 id="Step2-获取图片的实际像素大小-基于像素点的大小"><a href="#Step2-获取图片的实际像素大小-基于像素点的大小" class="headerlink" title="Step2:获取图片的实际像素大小[基于像素点的大小]"></a>Step2:获取图片的实际像素大小[基于像素点的大小]</h3><p><a href="https://stackoverflow.com/questions/9264051/nsimage-size-not-real-size-with-some-pictures" target="_blank" rel="external">https://stackoverflow.com/questions/9264051/nsimage-size-not-real-size-with-some-pictures</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">+(NSSize)getImageSizeWithData:(NSData *)imageData&#123;</div><div class="line">    NSBitmapImageRep *rep = [NSBitmapImageRep imageRepWithData:imageData];</div><div class="line">    return NSMakeSize(rep.pixelsWide, rep.pixelsHigh);</div><div class="line">&#125;</div><div class="line"></div><div class="line">NSImage size method return size in points. To get size represented in pixels you need inspect NSImage.representations property that contains an array of NSImageRep objects with pixelWide/pixelHigh properties and simple change size NSImage object:</div><div class="line"></div><div class="line">NSImage size method returns size information that is screen resolution dependent. To get the size represented in the actual file image you need to use an NSImageRep. You can get an NSImageRepfrom an NSImage using the representations method. Alternatively you can create a NSBitmapImageRep subclass instance directly like this:</div><div class="line">NSArray * imageReps = [NSBitmapImageRep imageRepsWithContentsOfFile:@&quot;&lt;path to image&gt;&quot;];</div><div class="line"></div><div class="line">NSInteger width = 0;</div><div class="line">NSInteger height = 0;</div><div class="line"></div><div class="line">for (NSImageRep * imageRep in imageReps) &#123;</div><div class="line">    if ([imageRep pixelsWide] &gt; width) width = [imageRep pixelsWide];  </div><div class="line">    if ([imageRep pixelsHigh] &gt; height) height = [imageRep pixelsHigh];  </div><div class="line">&#125;</div><div class="line"></div><div class="line">NSLog(@&quot;Width from NSBitmapImageRep: %f&quot;,(CGFloat)width);</div><div class="line">NSLog(@&quot;Height from NSBitmapImageRep: %f&quot;,(CGFloat)height);</div></pre></td></tr></table></figure>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/15/图片压缩/" data-id="cjjmghyqs0000to05ads1me20" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/07/14/hello-world/" class="article-date">
-  <time datetime="2018-07-14T13:15:57.380Z" itemprop="datePublished">2018-07-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/07/14/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/14/hello-world/" data-id="cjjmfgnjp0000j7054jj7pf5v" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-如何利用Hexo搭建自己的个人Blog" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/10/12/如何利用Hexo搭建自己的个人Blog/" class="article-date">
-  <time datetime="2017-10-11T16:55:09.000Z" itemprop="datePublished">2017-10-12</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/10/12/如何利用Hexo搭建自己的个人Blog/">如何利用Hexo搭建自己的个人Blog</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>参考</p>
-<ol>
-<li><a href="https://www.sunyazhou.com/2017/02/10/build-hexo-blog-Tutorial/" target="_blank" rel="external">搭建hexo博客教程</a></li>
-<li><a href="http://skx926.com/2016/01/26/build-hexo/" target="_blank" rel="external">利用Hexo和Github Pages搭建个人博客</a></li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/10/12/如何利用Hexo搭建自己的个人Blog/" data-id="cjjmfgnjw0002j705co9z46ev" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-我的第一篇博文" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/10/12/我的第一篇博文/" class="article-date">
-  <time datetime="2017-10-11T16:29:26.000Z" itemprop="datePublished">2017-10-12</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/10/12/我的第一篇博文/">我的第一篇博文</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>基本流程，只做第一个博客，需要准备的材料有以下：</p>
-<h3 id="1-工具软件"><a href="#1-工具软件" class="headerlink" title="1.工具软件"></a>1.工具软件</h3><p>1.0 Git软件<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">代码存储，博客文章存储，博客主题下载，Github Pages能力等</div></pre></td></tr></table></figure></p>
-<p>1.1 <a href="http://nodejs.cn/" target="_blank" rel="external">nodejs</a><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行环境。 </div><div class="line">Node.js 使用了一个事件驱动、非阻塞式 I/O 的模型，使其轻量又高效。 </div><div class="line">Node.js 的包管理器 npm，是全球最大的开源库生态系统。</div></pre></td></tr></table></figure></p>
-<p>1.2 <a href="https://www.npmjs.com/" target="_blank" rel="external">npm</a><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">npm is the package manager <span class="keyword">for</span> JavaScript and the world’s largest software registry. Discover packages of reusable code — and assemble them <span class="keyword">in</span> powerful new ways.</div><div class="line">`</div></pre></td></tr></table></figure></p>
-<p>安转Hexo示例<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">npm install -g hexo-cli</div></pre></td></tr></table></figure></p>
-<p>1.3 <a href="https://hexo.io/" target="_blank" rel="external">hexo</a><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">A fast, simple &amp; powerful blog framework</div><div class="line">提供丰富界面Theme的博客文章，用户可以傻瓜式的生成博客文章。</div></pre></td></tr></table></figure></p>
-<p>1.4 <a href="https://hexo.io/zh-cn/docs/deployment.html" target="_blank" rel="external">hexo-deployer-git</a><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Hexo 提供了快速方便的一键部署功能，让您只需一条命令就能将网站部署到服务器上。</div></pre></td></tr></table></figure></p>
-<p>部署Hexo Blog示例：<br>hexo 使用deploy命令就可以一键把pulic文件夹的静态页面文件提交到远程Github仓库里<br>在开始之前，您必须先在 _config.yml 中修改参数，一个正确的部署配置中至少要有 type 参数，例如：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">deploy:</div><div class="line"><span class="built_in">type</span>: git</div><div class="line">repository: https://github.com/&#123;github账户名&#125;/&#123;github账户名&#125;.github.io.git</div><div class="line">branch: master</div></pre></td></tr></table></figure></p>
-<p>1.4 <a href="http://www.jianshu.com/p/8671e439a811" target="_blank" rel="external">nvm</a> </p>
-<h3 id="2-基本技能："><a href="#2-基本技能：" class="headerlink" title="2.基本技能："></a>2.基本技能：</h3><p>2.1 <a href="https://baike.baidu.com/item/markdown/3245829?fr=aladdin" target="_blank" rel="external">MarkDown</a><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">**Markdown**是一种可以使用普通文本编辑器编写的标记语言，通过简单的标记语法，它可以使普通文本内容具有一定的格式。</div></pre></td></tr></table></figure></p>
-<p>2.2 github页面支持<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">配置[Github Pages](https://pages.github.com/)</div><div class="line">默认博客地址：&#123;github账户名&#125;.github.io</div><div class="line">``` </div><div class="line"></div><div class="line">2.3 创建本地hexo目录</div><div class="line">``` bash</div><div class="line">hexo init hexo目录名字</div></pre></td></tr></table></figure></p>
-<p>2.4 下载主题<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> hexo目录</div><div class="line">git <span class="built_in">clone</span> https://github.com/iissnan/hexo-theme-next themes/next</div></pre></td></tr></table></figure></p>
-<h3 id="3-博文管理"><a href="#3-博文管理" class="headerlink" title="3.博文管理"></a>3.博文管理</h3><p>所有命令，均在hexo的根目录下。</p>
-<p>3.0 配置博客<br>_config.yml文件，这个文件就是整个博客的配置文件，你可以修改里面的参数来对你的博客进行个性化的设置，比如设置博客的名称、主题什么的。我现在将主题修改成刚才下载的主题的名字maupassant，然后使用下面的命令预览一下新的主题。</p>
-<p>3.1 新建博文<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo new <span class="string">"博文名字"</span></div></pre></td></tr></table></figure></p>
-<p>3.2 预览博文<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo server --watch</div></pre></td></tr></table></figure></p>
-<p>3.3 生成博文静态页面<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo generate</div></pre></td></tr></table></figure></p>
-<p>3.4 部署到Github Pages【1.4+2.2+3.0】<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">-- 安装 npm install hexo-deployer-git --save</div><div class="line">-- 发布 hexo d -g</div></pre></td></tr></table></figure></p>
-<h2 id="4-hexo的目录展示"><a href="#4-hexo的目录展示" class="headerlink" title="4.hexo的目录展示"></a>4.<a href="https://hexo.io/docs/setup.html" target="_blank" rel="external">hexo的目录展示</a></h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">_config.yml 全局配置文件。要注意的是，该文件格式要求极为严格，缺少一个空格都会导致运行错误。小提示：不要用Tab缩进，两个空格符， 冒号：后面只用一个空格即可 。</div><div class="line"></div><div class="line">themes 存放主题的文件夹</div><div class="line"></div><div class="line"><span class="built_in">source</span> 博客文章资源文件夹</div><div class="line"></div><div class="line"><span class="built_in">source</span>/_drafts 草稿文件夹</div><div class="line"></div><div class="line"><span class="built_in">source</span>/_posts 文章文件夹</div></pre></td></tr></table></figure>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/10/12/我的第一篇博文/" data-id="cjjmfgnjy0003j705usbj9wp2" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
-</section>
-        
-          <aside id="sidebar">
-  
-    
-
-  
-    
-
-  
-    
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2018/07/15/图片压缩/">图片压缩总结</a>
-          </li>
-        
-          <li>
-            <a href="/2018/07/14/hello-world/">Hello World</a>
-          </li>
-        
-          <li>
-            <a href="/2017/10/12/如何利用Hexo搭建自己的个人Blog/">如何利用Hexo搭建自己的个人Blog</a>
-          </li>
-        
-          <li>
-            <a href="/2017/10/12/我的第一篇博文/">我的第一篇博文</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-</aside>
-        
-      </div>
-      <footer id="footer">
-  
-  <div class="outer">
-    <div id="footer-info" class="inner">
-      &copy; 2018 sunjinglin<br>
-      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
-    </div>
-  </div>
-</footer>
-    </div>
-    <nav id="mobile-nav">
-  
-    <a href="/" class="mobile-nav-link">Home</a>
-  
-    <a href="/archives" class="mobile-nav-link">Archives</a>
-  
-</nav>
-    
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-
-
-  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
-  <script src="/fancybox/jquery.fancybox.pack.js"></script>
-
-
-<script src="/js/script.js"></script>
-
-  </div>
-</body>
-</html>
+  include _partial/paginator.pug
+  if theme.disqus
+    script(id='dsq-count-scr', src='//'+ theme.disqus + '.disqus.com/count.js', async)
+  if theme.changyan
+    script#cy_cmt_num(src='https://changyan.sohu.com/upload/plugins/plugins.list.count.js?clientId=' + theme.changyan, async)
+  if config.mathjax
+    include _partial/mathjax.pug
+  if config.mathjax2
+    include _partial/mathjax2.pug
